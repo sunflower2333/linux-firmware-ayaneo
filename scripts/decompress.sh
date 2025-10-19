@@ -1,2 +1,2 @@
-#!/usr/bin/env bash
-# ...原始 decompress.sh 内容...
+#!/bin/sh
+find ../ath12k/ ../qcom -name "*.zst" -exec unzstd --rm {} \;

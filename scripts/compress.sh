@@ -1,2 +1,2 @@
-#!/usr/bin/env bash
-# ...原始 compress.sh 内容...
+#!/bin/sh
+find ../ath12k/ ../qcom/ -type f -exec zstd --rm {} \;

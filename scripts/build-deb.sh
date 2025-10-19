@@ -36,7 +36,14 @@ else
 fi
 
 # Copy repo into package, exclude heavy or CI dirs
-rsync -a --exclude='.git' --exclude='.github' --exclude='artifacts' --exclude='scripts' --exclude='node_modules' ./ "${PKGROOT}${install_path}/"
+rsync -a \
+  --exclude='.git' \
+  --exclude='.github' \
+  --exclude='artifacts' \
+  --exclude='scripts' \
+  --exclude='node_modules' \
+  --exclude='*.zst' \
+  ./ "${PKGROOT}${install_path}/"
 
 # Create a basic control file
 cat > "${PKGROOT}/DEBIAN/control" <<EOF
