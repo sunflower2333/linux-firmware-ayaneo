@@ -15,11 +15,29 @@ if [[ "${GITHUB_REF:-}" =~ refs/tags/(.+) ]]; then
   VERSION="${BASH_REMATCH[1]}"
 else
   if git rev-parse --git-dir >/dev/null 2>&1; then
-    VERSION="$(git describe --tags --always --dirty)"
+    VERSION="$(git describe --tags --always)"
   else
     VERSION="0.0.0"
   fi
 fi
+
+# Normalize VERSION to Debian-compatible format:
+# - Prefer numeric start; strip leading 'v' or any non-digit prefix (e.g., 'release-')
+# - Allow only [A-Za-z0-9.+~-]; replace others with '-'
+# - If still not starting with a digit, fallback to 0.<date>+g<sha>
+orig_version="$VERSION"
+# Remove leading 'v'
+VERSION="${VERSION#v}"
+# Strip leading non-digits to let versions like 'release-25.42' become '25.42'
+VERSION="$(printf '%s' "$VERSION" | sed -E 's/^[^0-9]+//')"
+# Sanitize characters to allowed set
+VERSION="$(printf '%s' "$VERSION" | sed -E 's/[^A-Za-z0-9.+~-]+/-/g')"
+if [[ -z "$VERSION" || ! "$VERSION" =~ ^[0-9] ]]; then
+  SHORT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo src)"
+  DATESTAMP="$(date +%Y%m%d%H%M%S)"
+  VERSION="0.${DATESTAMP}+g${SHORT_SHA}"
+fi
+
 ARCH="$(dpkg --print-architecture || echo all)"
 OUT_DIR="artifacts"
 WORKDIR="$(mktemp -d)"

@@ -1,5 +1,4 @@
-name: Build Debian package (Ubuntu 24.04)
-
+name: Build Debian package
 on:
   push:
     branches: [ "main" ]
@@ -22,7 +21,7 @@ jobs:
           GITHUB_REF: refs/tags/${{ env.TAG_NAME }}
         run: |
           ./scripts/build-deb.sh
-          cd artifacts && 7z a ../firmware_deb.7z *.deb
+          cd artifacts && 7z a ../firmware_deb.7z *.deb && cd ..
 
       - name: Set Release Tag and Name
         id: set_tag_name
