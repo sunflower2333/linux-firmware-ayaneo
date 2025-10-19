@@ -38,6 +38,7 @@ rsync -a \
   --exclude='scripts' \
   --exclude='node_modules' \
   --exclude='*.zst' \
+  --exclude='README.md' \
   ./ "${PKGROOT}${install_path}/"
 
 # Create a basic control file
