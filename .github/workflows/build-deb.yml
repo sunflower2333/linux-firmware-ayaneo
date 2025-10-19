@@ -3,13 +3,11 @@ name: Build Debian package (Ubuntu 24.04)
 on:
   push:
     branches: [ "main" ]
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
   build-deb:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     env:
       PACKAGE_NAME: ${{ github.event.repository.name }}
     steps:
@@ -17,17 +15,39 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install build dependencies
-        run: sudo apt-get update && sudo apt-get install -y dpkg-dev fakeroot rsync
-
-      - name: Make packaging script executable
-        run: |
-          if [ -f ./scripts/build-deb.sh ]; then chmod +x ./scripts/build-deb.sh; else echo "No build script found"; exit 1; fi
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev fakeroot rsync zstd p7zip
 
       - name: Build .deb
-        run: ./scripts/build-deb.sh
+        env:
+          GITHUB_REF: refs/tags/${{ env.TAG_NAME }}
+        run: |
+          ./scripts/build-deb.sh
+          cd artifacts && 7z a ../firmware_deb.7z *.deb
 
-      - name: Upload .deb artifact
-        uses: actions/upload-artifact@v4
+      - name: Set Release Tag and Name
+        id: set_tag_name
+        run: |
+          current_time=$(date +"%y.%U.%H.%M")
+          echo "TAG_NAME=release-${current_time}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=Release ${current_time}" >> $GITHUB_ENV
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: deb-package
-          path: ./artifacts/*.deb
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: ${{ env.RELEASE_NAME }}
+          draft: false
+          prerelease: true
+
+      - name: Upload Firmware package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: firmware_deb.7z
+          asset_name: firmware_deb.7z
+          asset_content_type: application/x-7z-compressed
