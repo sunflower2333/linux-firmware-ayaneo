@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-#!/usr/bin/env bash
-# set -euo pipefail
+# Unpack zst files before packaging
+if [ -f scripts/decompress.sh ]; then
+  ./scripts/decompress.sh
+fi
 
 # Packaging script for repository -> .deb
 # Copies repository into /opt/<package> inside the package by default.
@@ -27,16 +29,6 @@ install_path="/usr/lib/firmware"
 
 mkdir -p "${PKGROOT}/DEBIAN"
 mkdir -p "${PKGROOT}${install_path}"
-
-# 在打包前自动解压固件
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DECOMPRESS_SH="${SCRIPT_DIR}/decompress.sh"
-if [ -f "$DECOMPRESS_SH" ] && [ -x "$DECOMPRESS_SH" ]; then
-  "$DECOMPRESS_SH"
-else
-  echo "$DECOMPRESS_SH does not exist or is not executable"
-fi
-
 
 # Copy repo into package, exclude heavy or CI dirs
 rsync -a \
