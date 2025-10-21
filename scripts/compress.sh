@@ -1,2 +1,8 @@
 #!/bin/sh
-find ath12k/ qcom/ renesas_usb_fw.mem -type f -exec zstd --rm {} \;
+find . \
+  -type f \
+  ! -name '*.zst' \
+  ! -name '*.md' \
+  ! -path '*/.*' \
+  ! -path '*/scripts/*' \
+  -exec zstd --rm {} \;
